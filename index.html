@@ -51,7 +51,7 @@
   <div id="warn"></div>
 </div>
 <div id="side">
-  <b>GSTAR 11/17</b> · bc9a5b03
+  <b>GSTAR 11/17</b> · 66b62b1a
 </div>
 <div id="footer">
   <span id="footer-title"></span>
@@ -305,16 +305,16 @@
 
   var buildUrl = "Build";
   // 주소를 고정해 같은 경로에 덮어 배포하므로, 브라우저 캐시에 남은 이전 빌드 파일과 섞이지 않게 빌드 sha를 붙인다.
-  var buildQuery = "?v=bc9a5b03";
+  var buildQuery = "?v=66b62b1a";
   var config = {
     arguments: [],
-    dataUrl: buildUrl + "/TeenipingTycoon-gstar-WebGLBuild-1117.data.unityweb" + buildQuery,
-    frameworkUrl: buildUrl + "/TeenipingTycoon-gstar-WebGLBuild-1117.framework.js.unityweb" + buildQuery,
-    codeUrl: buildUrl + "/TeenipingTycoon-gstar-WebGLBuild-1117.wasm.unityweb" + buildQuery,
+    dataUrl: buildUrl + "/TeenipingTycoon-gstar-WebGLBuild-1117b.data.unityweb" + buildQuery,
+    frameworkUrl: buildUrl + "/TeenipingTycoon-gstar-WebGLBuild-1117b.framework.js.unityweb" + buildQuery,
+    codeUrl: buildUrl + "/TeenipingTycoon-gstar-WebGLBuild-1117b.wasm.unityweb" + buildQuery,
     streamingAssetsUrl: "StreamingAssets",
     companyName: "DefaultCompany",
     productName: "TeeniepingLittleTown",
-    productVersion: "0.0.1.2472",
+    productVersion: "0.0.1.2478",
     showBanner: unityShowBanner,
     // 기본 처리는 alert만 띄운다. 실제 메시지를 팝업에 보여 주고 alert는 막는다.
     errorHandler: function (message) {
@@ -329,7 +329,7 @@
     session = { stage: "loader", time: Date.now(), logs: session.logs };
     saveSession(true);
     var script = document.createElement("script");
-    script.src = buildUrl + "/TeenipingTycoon-gstar-WebGLBuild-1117.loader.js" + buildQuery;
+    script.src = buildUrl + "/TeenipingTycoon-gstar-WebGLBuild-1117b.loader.js" + buildQuery;
     script.onerror = function () { showError("로딩 실패", "로더 스크립트를 받지 못했어요: " + script.src); };
     script.onload = function () {
       var loading = document.querySelector("#loading");
