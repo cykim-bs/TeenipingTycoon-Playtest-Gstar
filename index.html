@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
 <meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="티니핑: 리틀타운">
+<meta name="theme-color" content="#111111">
 <title>티니핑: 리틀타운 · GSTAR 11/17</title>
 <link rel="icon" href="data:,">
 <style>
@@ -24,6 +29,11 @@
   #fullscreen:hover { background:#45b8ec; }
   #fullscreen:disabled { opacity:.4; cursor:default; }
   #fullscreen svg { width:20px; height:20px; }
+  #ios-guide { position:fixed; inset:0; z-index:9; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); font-family:system-ui, "Malgun Gothic", sans-serif; }
+  #ios-guide .box { width:min(88vw, 360px); background:#fff; color:#222; border-radius:12px; padding:16px 18px; box-sizing:border-box; font-size:14px; line-height:1.55; }
+  #ios-guide p { margin:6px 0; }
+  #ios-guide .note { color:#777; font-size:12px; }
+  #ios-guide button { display:block; margin:12px 0 0 auto; font-size:15px; padding:8px 18px; border-radius:8px; border:0; background:#ff5fa2; color:#fff; }
   #error { position:fixed; inset:0; z-index:10; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.7); font-family:system-ui, "Malgun Gothic", sans-serif; }
   #error .box { width:min(92vw, 520px); max-height:86vh; overflow:auto; background:#fff; color:#222; border-radius:12px; padding:18px; box-sizing:border-box; }
   #error h2 { margin:0 0 8px; font-size:18px; }
@@ -48,6 +58,14 @@
   <button id="fullscreen" type="button" title="전체화면" aria-label="전체화면" disabled>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7"/></svg>
   </button>
+</div>
+<div id="ios-guide">
+  <div class="box">
+    <p><b>전체 화면으로 하려면</b></p>
+    <p>아이폰 사파리는 웹페이지 전체 화면을 지원하지 않아요. <b>공유</b> 버튼(또는 ··· 메뉴) → <b>홈 화면에 추가</b>로 만든 아이콘으로 열면 주소창 없이 전체 화면으로 실행돼요.</p>
+    <p class="note">홈 화면 아이콘으로 연 게임은 사파리와 저장 데이터가 따로예요.</p>
+    <button type="button" id="ios-guide-close">확인</button>
+  </div>
 </div>
 <div id="error">
   <div class="box">
@@ -149,7 +167,11 @@
   var FOOTER_HEIGHT = 38;
   // 렌더 버퍼 긴 변 상한(px). 전체화면을 가로로 꽉 채우면 1440p 모니터·배율 2에서 5120×2880까지 커진다.
   var MAX_RENDER_LONG_SIDE = 2560;
-  var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  // 홈 화면 아이콘으로 연 웹앱(주소창 없음)
+  var isStandalone = navigator.standalone === true
+    || (window.matchMedia && (matchMedia("(display-mode: standalone)").matches || matchMedia("(display-mode: fullscreen)").matches));
   // 휴대폰 고해상도 화면은 렌더 버퍼가 커져 메모리를 많이 쓴다.
   var BASE_PIXEL_RATIO = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
   var stage = document.querySelector("#stage");
@@ -200,25 +222,33 @@
 
   // ── 하단 바 ──────────────────────────────────────────────────────
   // Unity 기본 템플릿처럼 캔버스 아래에 제목과 전체화면 버튼을 둔다. 빠져나올 때는 Esc·뒤로 가기.
-  // iPhone Safari처럼 요소 전체화면을 지원하지 않으면 하단 바를 숨기고 그만큼 게임 화면을 키운다.
+  // iPhone Safari는 요소 전체화면을 지원하지 않는다. 그때 버튼은 홈 화면에 추가하는 방법을 안내하고,
+  // 홈 화면 아이콘으로 열어 이미 주소창이 없으면 하단 바를 숨기고 그만큼 게임 화면을 키운다.
   var fullscreenSupported = !!(nativeRequestFullscreen || nativeWebkitRequestFullscreen)
     && !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
-  var footerHeight = fullscreenSupported ? FOOTER_HEIGHT : 0;
-  footer.style.display = fullscreenSupported ? "flex" : "none";
+  var showIosGuide = isMobile && !fullscreenSupported && !isStandalone;
+  var showFooter = fullscreenSupported || showIosGuide;
+  var footerHeight = showFooter ? FOOTER_HEIGHT : 0;
+  footer.style.display = showFooter ? "flex" : "none";
   document.querySelector("#footer-title").textContent = document.title;
+  var iosGuide = document.querySelector("#ios-guide");
+  if (showIosGuide) fullscreenButton.disabled = false;
+  document.querySelector("#ios-guide-close").onclick = function () { iosGuide.style.display = "none"; };
 
   fullscreenButton.onclick = function () {
+    if (!fullscreenSupported) { iosGuide.style.display = "flex"; return; }
     if (!window.unityInstance) return;
     requestStageFullscreen();
   };
 
-  // 전체화면은 화면을 꽉 채운다. 창 모드는 세로 화면(휴대폰)이면 꽉 채우고, 가로 화면(PC)이면 9:16으로 높이에 맞춘다.
+  // 전체화면과 휴대폰·태블릿은 세로·가로 모두 화면을 꽉 채운다(UI는 CanvasScaler Expand·HUD 16:9 상한이 가로를 맞춘다).
+  // PC 창 모드만 세로로 긴 창이면 꽉 채우고, 가로로 넓은 창이면 9:16으로 높이에 맞춘다.
   // 하단 바는 캔버스 폭에 맞추고, 전체화면에서는 보이지 않으므로 그 높이까지 게임 화면으로 쓴다.
   function fit() {
     var fullscreen = isFullscreen();
     var bottom = fullscreen ? 0 : footerHeight;
     var w = window.innerWidth, h = window.innerHeight - bottom, cw, ch;
-    if (fullscreen || w / h <= 0.75) { cw = w; ch = h; }
+    if (fullscreen || isMobile || w / h <= 0.75) { cw = w; ch = h; }
     else { ch = h; cw = Math.round(h * ASPECT); }
     stage.style.bottom = bottom + "px";
     canvas.style.width = cw + "px";
@@ -245,12 +275,9 @@
     refitTimer = setTimeout(fit, 300);
   }
 
+  // 화면 방향은 고정하지 않는다. 기기를 돌리면 resize·orientationchange에서 다시 맞춘다.
   function onFullscreenChange() {
     scheduleFit();
-    // 안드로이드 크롬은 전체화면일 때만 세로 고정을 걸 수 있다. iOS·PC는 지원하지 않아 거절되므로 무시한다.
-    if (isMobile && isFullscreen() && screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock("portrait").catch(function () {});
-    }
   }
 
   window.addEventListener("resize", scheduleFit);
